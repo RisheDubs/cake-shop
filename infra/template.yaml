@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cake Shop backend (API, data, auth, images). One stack per stage: dev and prod.
+  First deploy happens in Sprint 2. See docs/architecture/README.md.
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+  AllowedOrigins:
+    Type: String
+    Default: http://localhost:3000
+    Description: Comma-separated website origins allowed to call the API.
+  LambdaAdapterLayerArn:
+    Type: String
+    Description: >
+      AWS Lambda Web Adapter layer ARN (ARM64) for your region. Take the latest version from
+      https://github.com/awslabs/aws-lambda-web-adapter (README, "Lambda functions packaged as Zip").
+      Format: arn:aws:lambda:<region>:753240598075:layer:LambdaAdapterLayerArm64:<version>
+
+Globals:
+  Function:
+    Runtime: provided.al2023
+    Architectures: [arm64]       # Graviton: cheaper and fast for Go
+    MemorySize: 256
+    Timeout: 10
+    Tracing: Active
+    Environment:
+      Variables:
+        APP_ENV: !Ref Stage
+        TABLE_NAME: !Ref Table
+        ALLOWED_ORIGINS: !Ref AllowedOrigins
+        STORE_BACKEND: dynamodb
+
+Resources:
+  # ---------- Data ----------
+  Table:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub cakeshop-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: PK, AttributeType: S }
+        - { AttributeName: SK, AttributeType: S }
+        - { AttributeName: GSI1PK, AttributeType: S }
+        - { AttributeName: GSI1SK, AttributeType: S }
+      KeySchema:
+        - { AttributeName: PK, KeyType: HASH }
+        - { AttributeName: SK, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - { AttributeName: GSI1PK, KeyType: HASH }
+            - { AttributeName: GSI1SK, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [PUT]          # owner uploads via pre-signed URL
+            AllowedOrigins: !Split [",", !Ref AllowedOrigins]
+            AllowedHeaders: ["*"]
+  # CloudFront distribution with Origin Access Control for ImagesBucket: Sprint 4.
+
+  # ---------- Auth ----------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub cakeshop-${Stage}
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy: { MinimumLength: 8, RequireNumbers: true }
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false               # public clients: web + mobile
+      ExplicitAuthFlows: [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: admin
+      Description: Shop owner and staff
+
+  # ---------- API ----------
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # No StageName: uses the $default stage, so paths have no /dev prefix
+      # (dev and prod are separate stacks anyway).
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 50
+        ThrottlingRateLimit: 20
+      Auth:
+        Authorizers:
+          Cognito:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+              audience: [!Ref UserPoolClient]
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile               # runs `make build-ApiFunction` in api/
+    Properties:
+      CodeUri: ../api
+      Handler: bootstrap
+      Layers: [!Ref LambdaAdapterLayerArn]
+      Environment:
+        Variables:
+          AWS_LWA_PORT: "8080"
+          AWS_LWA_READINESS_CHECK_PATH: /health
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3CrudPolicy: { BucketName: !Ref ImagesBucket }
+      # Explicit routes: public ones have no authorizer, everything else needs a Cognito token.
+      # The "admin" group is additionally checked in Go (JWT claim cognito:groups).
+      Events:
+        Health:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/health", Method: GET }
+        CakesList:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/cakes", Method: GET }
+        CakeGet:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/cakes/{id}", Method: GET }
+        CakeQuote:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/cakes/{id}/quote", Method: GET }
+        Slots:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/slots", Method: GET }
+        Webhooks:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/webhooks/{proxy+}", Method: POST }
+        OrdersRoot:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/orders", Method: ANY, Auth: { Authorizer: Cognito } }
+        Orders:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/orders/{proxy+}", Method: ANY, Auth: { Authorizer: Cognito } }
+        Me:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/me/{proxy+}", Method: ANY, Auth: { Authorizer: Cognito } }
+        Admin:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/v1/admin/{proxy+}", Method: ANY, Auth: { Authorizer: Cognito } }
+
+  # ChatFunction (Sprint 6): separate Lambda, Timeout 30, its own throttling,
+  # bedrock:InvokeModel permission (or SSM read for the API key), route POST /v1/chat.
+
+  ApiErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: API function errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{ Name: FunctionName, Value: !Ref ApiFunction }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  TableName:
+    Value: !Ref Table
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  ImagesBucket:
+    Value: !Ref ImagesBucket

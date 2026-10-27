@@ -1,0 +1,66 @@
+package httpapi
+
+import (
+	"errors"
+	"net/http"
+	"strconv"
+
+	"cakeshop/api/internal/cakes"
+)
+
+type cakeHandlers struct {
+	svc *cakes.Service
+}
+
+// GET /v1/cakes?occasion=birthday&tag=eggless
+func (h cakeHandlers) list(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	list, err := h.svc.List(cakes.Filter{
+		Occasion:      q.Get("occasion"),
+		Tag:           q.Get("tag"),
+		OnlyAvailable: q.Get("all") != "true", // admins can pass all=true later
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal", "could not load cakes")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"cakes": list})
+}
+
+// GET /v1/cakes/{id}
+func (h cakeHandlers) get(w http.ResponseWriter, r *http.Request) {
+	c, err := h.svc.Get(r.PathValue("id"))
+	if errors.Is(err, cakes.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "not_found", "cake not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal", "could not load cake")
+		return
+	}
+	writeJSON(w, http.StatusOK, c)
+}
+
+// GET /v1/cakes/{id}/quote?size=8in&qty=1
+func (h cakeHandlers) quote(w http.ResponseWriter, r *http.Request) {
+	qty := 1
+	if s := r.URL.Query().Get("qty"); s != "" {
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "bad_request", "qty must be a number")
+			return
+		}
+		qty = n
+	}
+	q, err := h.svc.Quote(r.PathValue("id"), r.URL.Query().Get("size"), qty)
+	switch {
+	case errors.Is(err, cakes.ErrNotFound):
+		writeError(w, http.StatusNotFound, "not_found", "cake or size not found")
+	case errors.Is(err, cakes.ErrUnavailable):
+		writeError(w, http.StatusConflict, "unavailable", "this cake is not available right now")
+	case err != nil:
+		writeError(w, http.StatusBadRequest, "bad_request", err.Error())
+	default:
+		writeJSON(w, http.StatusOK, q)
+	}
+}

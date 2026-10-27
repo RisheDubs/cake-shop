@@ -1,0 +1,20 @@
+# Click "Send Request" above each block (VS Code REST Client extension).
+@base = http://localhost:8080
+
+### Health
+GET {{base}}/health
+
+### All cakes on sale
+GET {{base}}/v1/cakes
+
+### Eggless cakes for Eid
+GET {{base}}/v1/cakes?occasion=eid&tag=eggless
+
+### One cake (ingredients, allergens, sizes)
+GET {{base}}/v1/cakes/pistachio-rose
+
+### Price for two 8-inch red velvet cakes
+GET {{base}}/v1/cakes/red-velvet/quote?size=8in&qty=2
+
+### Unavailable cake -> 409
+GET {{base}}/v1/cakes/mango-seasonal/quote?size=6in

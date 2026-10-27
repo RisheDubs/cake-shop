@@ -1,0 +1,33 @@
+name: api-ci
+
+on:
+  pull_request:
+    paths: ["api/**", "infra/**", ".github/workflows/api-ci.yml"]
+  push:
+    branches: [develop, main]
+    paths: ["api/**", "infra/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: api/go.sum
+      - name: Format check
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && echo "Run gofmt -w ." && exit 1)
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -race -coverprofile=coverage.out ./...
+      - name: Build Lambda binary
+        run: GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o bin/bootstrap ./cmd/server
+
+  # Sprint 2: add a "deploy-dev" job (push to develop) and "deploy-prod" job (push to main)
+  # using aws-actions/configure-aws-credentials with a GitHub OIDC role, then
+  # `sam build && sam deploy --config-env <stage> --no-confirm-changeset`.

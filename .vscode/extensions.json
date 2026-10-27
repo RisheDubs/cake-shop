@@ -1,0 +1,17 @@
+{
+  // VS Code will offer to install these when you open the folder.
+  "recommendations": [
+    "golang.go",                          // Go: IntelliSense, debugging, tests
+    "amazonwebservices.aws-toolkit-vscode", // AWS explorer, SAM, Lambda logs
+    "redhat.vscode-yaml",                 // YAML + CloudFormation tag support
+    "eamodio.gitlens",                    // Git history and blame
+    "github.vscode-pull-request-github",  // PRs and issues inside VS Code
+    "github.vscode-github-actions",       // CI workflow editing
+    "humao.rest-client",                  // Run api/requests.http against the API
+    "editorconfig.editorconfig",
+    "bierner.markdown-mermaid",           // Preview architecture diagrams in docs
+    "davidanson.vscode-markdownlint",
+    "esbenp.prettier-vscode",             // Frontend (Phase 3)
+    "bradlc.vscode-tailwindcss"           // Frontend (Phase 3)
+  ]
+}

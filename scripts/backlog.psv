@@ -1,0 +1,50 @@
+# sprint|labels|title|body   (pipe-separated; lines starting with # are ignored)
+# Imported into GitHub Issues by scripts/setup-github.sh. Edit freely before importing.
+0|type:chore,area:infra,size:S,priority:must|Create AWS account, MFA, SSO user and AWS Budgets alerts ($10/$25)|Follow infra/README.md one-time setup. Done when you can run `aws sts get-caller-identity` via SSO and budget emails are configured.
+0|type:chore,area:infra,size:S,priority:must|Create GitHub repo, push scaffold, protect main and develop|See docs/process/git-workflow.md. Enable branch protection and require api-ci.
+0|type:chore,area:docs,size:S,priority:must|Set up GitHub Project board with Scrumban columns and WIP limits|Columns: Backlog, Ready, In progress (WIP 2), In review (WIP 2), Done. See docs/process/workflow.md.
+0|type:spike,area:infra,size:S,priority:must|SPIKE-01: Choose AWS region|me-central-1 vs eu-central-1. Check Lambda arm64, HTTP API, Cognito, SES, Amplify Hosting and the Claude model on Bedrock. Write ADR 0006.
+0|type:spike,area:ai,size:S,priority:must|SPIKE-02: Bedrock vs Claude API for the assistant|Compare availability in chosen region, pricing, latency, billing. Write ADR 0007.
+0|type:spike,area:api,size:S,priority:must|SPIKE-03: Payment gateway for Qatar|Find which gateways the client's bank supports, fees, hosted checkout and webhook support. Write ADR 0008.
+0|type:chore,area:docs,size:S,priority:must|Collect client menu, prices, sizes, ingredients, allergens, lead times and photos|Real data replaces store/seed.go in Sprint 2. Also capture delivery zones, hours, daily capacity.
+1|type:chore,area:api,size:M,priority:must|Go basics: Tour of Go + read every file in api/|Goal: explain each package in api/internal in your own words in the sprint log.
+1|type:story,area:api,size:S,priority:must|Run the API locally and debug it in VS Code|Use the launch config and requests.http. Set a breakpoint in cakes.Service.Quote.
+1|type:story,area:api,size:M,priority:must|Cake catalogue filters and validation|As a customer I can filter by occasion and tag; bad query params return 400 in the standard error shape. Tests included.
+1|type:story,area:api,size:S,priority:should|Add golangci-lint to CI|Add a lint step to .github/workflows/api-ci.yml and fix findings.
+2|type:story,area:api,size:M,priority:must|DynamoDB repository for cakes|Implement store/dynamodb.go satisfying cakes.Repository using aws-sdk-go-v2. Keys per docs/architecture/data-model.md. Select via STORE_BACKEND.
+2|type:chore,area:api,size:S,priority:must|Seed script: load the client's real menu into DynamoDB|cmd/seed reads a JSON file and writes CAKE# items.
+2|type:chore,area:infra,size:M,priority:must|First SAM deploy of cakeshop-dev|sam build and deploy; ApiUrl /v1/cakes returns real menu.
+2|type:chore,area:infra,size:M,priority:must|GitHub OIDC role + deploy-dev job in CI|Push to develop deploys cakeshop-dev automatically. No stored AWS keys.
+3|type:story,area:api,size:M,priority:must|Delivery slots with capacity, blocked dates and lead time|GET /v1/slots?date=&cake= returns only slots that respect cake LeadTimeHours, capacity and blocked days. Table-driven tests for edge cases.
+3|type:story,area:api,size:M,priority:must|Create order with server-side pricing and slot reservation|POST /v1/orders re-quotes price, snapshots lines, books slot with a conditional update (no double booking). Status pending_payment.
+3|type:story,area:api,size:S,priority:must|Order status and order history for the customer|GET /v1/orders/{id} (own only) and GET /v1/me/orders.
+3|type:story,area:api,size:S,priority:must|Order state machine|Valid transitions only: draft -> pending_payment -> paid -> baking -> out_for_delivery -> delivered; cancelled/refunded. Unit tested.
+4|type:story,area:api,size:M,priority:must|Cognito auth: read JWT claims in Go and enforce admin group|Middleware puts user id and groups in the request context. /v1/admin/* returns 403 for non-admins.
+4|type:story,area:api,size:M,priority:must|Admin: manage cakes, sizes and availability|POST/PUT/DELETE /v1/admin/cakes. Validation and tests.
+4|type:story,area:api,size:S,priority:must|Admin: image upload via pre-signed S3 URL + CloudFront|Owner uploads a photo, cake imageUrl points to CloudFront.
+4|type:story,area:api,size:M,priority:must|Admin: orders for a day, change status, block days and set capacity|GET /v1/admin/orders?date=, PATCH status, PUT /v1/admin/slots/{date}.
+5|type:story,area:api,size:M,priority:must|Payment checkout session for an order|POST /v1/orders returns the gateway hosted-checkout URL.
+5|type:story,area:api,size:M,priority:must|Payment webhook: verify signature, idempotent, mark paid|Uses PAYEVT# conditional put. Replayed events do nothing.
+5|type:story,area:api,size:S,priority:must|Order confirmation emails via SES|Customer and owner get an email when an order is paid.
+5|type:docs,area:docs,size:S,priority:should|Freeze API v1 and generate openapi.yaml|Update docs/architecture/api-contract.md statuses.
+6|type:story,area:ai,size:M,priority:must|Chat Lambda skeleton with Claude tool-use loop|POST /v1/chat runs the tool loop with list_cakes, get_cake, quote. Separate Lambda, 30s timeout.
+6|type:story,area:ai,size:M,priority:must|Tools: check_delivery_slots and create_draft_order|Assistant can propose slots and create a draft order returning a checkout link. Never takes payment.
+6|type:story,area:ai,size:S,priority:must|Chat history in DynamoDB with 30-day TTL|CHAT#session items, last N turns sent to the model.
+6|type:story,area:ai,size:S,priority:must|System prompt: on-topic, facts only from tools, Arabic + English|Prompt stored in code with version number.
+7|type:story,area:ai,size:M,priority:must|AI eval test set in CI|30+ real customer questions with expected tool calls / constraints (e.g. never states a price without calling quote).
+7|type:story,area:ai,size:S,priority:must|Chat guardrails: turn limit, token limit, throttling, error fallback|Graceful message when the model is unavailable.
+7|type:chore,area:infra,size:S,priority:must|Alarms and dashboards: errors, latency, AI token usage|CloudWatch alarms emailed to you.
+7|type:docs,area:docs,size:S,priority:must|Backend v1 release: tag, changelog, update architecture docs|Milestone: Backend complete.
+8|type:spike,area:web,size:M,priority:must|Frontend experiment A: Gallery-first (big photos, hover reveal)|Branch ui/gallery. See web/README.md.
+8|type:spike,area:web,size:M,priority:must|Frontend experiment B: Story-scroll (one cake per screen)|Branch ui/story.
+8|type:spike,area:web,size:M,priority:must|Frontend experiment C: Chat-first (assistant is the homepage)|Branch ui/chat-first.
+8|type:chore,area:web,size:S,priority:must|Client picks a direction (scorecard) and ADR|Scorecard in web/README.md. Write ADR.
+9|type:story,area:web,size:M,priority:must|Menu page and cake cards with hover/tap details|Ingredients, allergens, sizes and prices from the API. Works on touch.
+9|type:story,area:web,size:M,priority:must|Cake detail page, size picker and cart|
+10|type:story,area:web,size:M,priority:must|Checkout: login, slot picker, address, payment redirect|
+10|type:story,area:web,size:M,priority:must|Chat widget ("Ask the baker")|Floating button, streaming-style UI, order button from chat.
+11|type:story,area:web,size:M,priority:must|Admin UI: menu, photos, orders today, block days|
+11|type:story,area:web,size:S,priority:should|Accessibility, SEO, performance pass|Lighthouse 90+ on mobile.
+12|type:chore,area:infra,size:M,priority:must|Production stack, domain, SSL, Amplify main branch|
+12|type:chore,area:web,size:M,priority:must|End-to-end test with the client and go-live|Real orders with test payments, then switch to live keys.
+13|type:docs,area:docs,size:L,priority:must|Final project documentation and handover|See docs/project/final-documentation-outline.md. Split into sections when the sprint starts.

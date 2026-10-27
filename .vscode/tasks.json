@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api: test",
+      "type": "shell",
+      "command": "go test ./...",
+      "options": { "cwd": "${workspaceFolder}/api" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "api: run",
+      "type": "shell",
+      "command": "go run ./cmd/server",
+      "options": { "cwd": "${workspaceFolder}/api" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "api: vet",
+      "type": "shell",
+      "command": "go vet ./...",
+      "options": { "cwd": "${workspaceFolder}/api" },
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "infra: sam build",
+      "type": "shell",
+      "command": "sam build",
+      "options": { "cwd": "${workspaceFolder}/infra" },
+      "problemMatcher": []
+    }
+  ]
+}

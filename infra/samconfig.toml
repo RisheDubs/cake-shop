@@ -1,0 +1,16 @@
+version = 0.1
+
+[dev.deploy.parameters]
+stack_name = "cakeshop-dev"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+parameter_overrides = "Stage=dev AllowedOrigins=http://localhost:3000"
+# region = "me-central-1"   # set after SPIKE-01 (region choice)
+
+[prod.deploy.parameters]
+stack_name = "cakeshop-prod"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+parameter_overrides = "Stage=prod AllowedOrigins=https://www.your-cake-shop-domain.com"

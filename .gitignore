@@ -1,0 +1,28 @@
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+*.pem
+
+# Go
+api/bin/
+*.test
+coverage.out
+coverage.html
+
+# AWS SAM
+.aws-sam/
+samconfig.local.toml
+
+# Frontend / mobile (Phase 3+)
+node_modules/
+.next/
+dist/
+.expo/
+build/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+*.swp

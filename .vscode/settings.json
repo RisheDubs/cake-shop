@@ -1,0 +1,29 @@
+{
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // Go
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "go.testFlags": ["-v", "-count=1"],
+  "go.coverOnSave": false,
+  "go.lintTool": "golangci-lint",
+  "gopls": {
+    "ui.semanticTokens": true,
+    "formatting.gofumpt": false
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.codeActionsOnSave": { "source.organizeImports": "explicit" }
+  },
+
+  // CloudFormation / SAM intrinsic tags (!Ref, !Sub ...)
+  "yaml.customTags": [
+    "!Ref", "!Sub", "!Sub sequence", "!GetAtt", "!Split sequence",
+    "!Join sequence", "!If sequence", "!Equals sequence", "!Select sequence"
+  ],
+
+  "search.exclude": { "**/bin": true, "**/.aws-sam": true, "**/node_modules": true },
+  "markdown.preview.breaks": true
+}
