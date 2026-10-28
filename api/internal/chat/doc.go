@@ -19,7 +19,8 @@
 // Payment never happens inside the chat; the customer confirms on the checkout page.
 // Conversation history is stored in DynamoDB (PK CHAT#<session>) with a 30-day TTL.
 // Guardrails: max turns per session, max tokens per reply, per-IP rate limiting, and a
-// system prompt that keeps it on cake-shop topics and replies in Arabic or English.
+// system prompt that keeps it on cake-shop topics and replies in English (Hindi or
+// Kannada too, if the client wants).
 // Quality: an eval test set of real customer questions with expected tool calls runs
 // in CI before any prompt change ships.
 package chat

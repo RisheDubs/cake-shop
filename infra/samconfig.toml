@@ -1,16 +1,28 @@
 version = 0.1
 
+# Region: Mumbai (ADR 0006). The cake shop lives in its own AWS account (cakeshop-dev),
+# reached through the SSO profile of the same name. Every resource gets project=cakeshop.
+
+[default.global.parameters]
+region = "ap-south-1"
+
 [dev.deploy.parameters]
 stack_name = "cakeshop-dev"
+profile = "cakeshop-dev"
+region = "ap-south-1"
 resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 parameter_overrides = "Stage=dev AllowedOrigins=http://localhost:3000"
-# region = "me-central-1"   # set after SPIKE-01 (region choice)
+tags = "project=cakeshop stage=dev"
 
 [prod.deploy.parameters]
+# Prod will live in the client's own AWS account (decided in Sprint 12).
 stack_name = "cakeshop-prod"
+profile = "cakeshop-prod"
+region = "ap-south-1"
 resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-parameter_overrides = "Stage=prod AllowedOrigins=https://www.your-cake-shop-domain.com"
+parameter_overrides = "Stage=prod AllowedOrigins=https://www.your-cake-shop-domain.in"
+tags = "project=cakeshop stage=prod"

@@ -6,12 +6,13 @@
 
 | | |
 |---|---|
-| Users | 50–100 regular customers, 1 owner + 1–2 staff (admin) |
+| Users | 50–100 regular customers in Bangalore, 1 owner + 1–2 staff (admin) |
 | Must have | Cake-first menu, hover/tap details (ingredients, sizes, prices), ordering with delivery slot, online payment, AI assistant that quotes real prices and delivery times, owner admin |
-| Later | Mobile app (iOS/Android) on the same API, WhatsApp notifications, loyalty |
-| Budget | Running cost target **under $40/month** |
+| Later | Mobile app (iOS/Android) on the same API, WhatsApp order updates, loyalty |
+| Budget | Running cost target **under $40/month** (about ₹3,500) |
 | Team | One developer, learning Go |
 | Principles | Serverless (no servers to patch), pay-per-use, infrastructure as code, one source of truth for prices |
+| Location | Region `ap-south-1` (Mumbai), own AWS account `cakeshop-dev`. See [ADR 0006](adr/0006-region-and-account.md) |
 
 ## 2. System context
 
@@ -20,7 +21,7 @@ flowchart LR
   C([Customer<br/>web / mobile]) -->|browse, order, chat| SYS[Cake Shop<br/>platform]
   O([Owner / staff]) -->|manage menu,<br/>orders, dates| SYS
   SYS -->|tool-calling| AI[Claude<br/>Haiku-class model]
-  SYS -->|hosted checkout,<br/>webhooks| PAY[Payment gateway]
+  SYS -->|hosted checkout,<br/>webhooks| PAY[Payment gateway<br/>UPI, cards]
   SYS -->|order emails| MAIL[Amazon SES]
 ```
 
@@ -57,7 +58,7 @@ flowchart TB
 
   subgraph External
     BR[Amazon Bedrock or<br/>Claude API]
-    PG[Payment gateway]
+    PG[Payment gateway<br/>UPI, cards]
     SES[SES email]
   end
 
@@ -155,7 +156,7 @@ sequenceDiagram
   CH->>S: cakes.List
   S-->>CH: real menu
   LLM-->>CH: tool_use: quote(chocolate-truffle, 10in, 1)
-  CH->>S: cakes.Quote -> 310 QAR
+  CH->>S: cakes.Quote -> ₹1,750
   LLM-->>CH: tool_use: check_delivery_slots(Thu)
   CH->>S: orders.AvailableSlots
   LLM-->>CH: final answer (price, ingredients, slots)
@@ -170,7 +171,7 @@ sequenceDiagram
 2. The chat can create a **draft** order and hand over a checkout link. It never takes payment.
 3. Limits: max turns per session, max output tokens, per-IP throttling at API Gateway.
 4. History stored in DynamoDB with a 30-day TTL (auto-deleted).
-5. Replies in the customer's language (Arabic or English).
+5. Replies in English by default; Hindi or Kannada if the client wants (decided in Sprint 6).
 6. An eval test set (real questions → expected tool calls) runs in CI before prompt changes ship.
 
 ## 5. Data model
@@ -187,11 +188,11 @@ See [api-contract.md](api-contract.md). Versioned under `/v1`, used by web, mobi
 - Secrets in SSM Parameter Store (SecureString), never in git (`.env` is ignored).
 - Public routes are read-only (menu, slots). Orders need a Cognito token; `/v1/admin/*` additionally requires the `admin` group, checked in Go.
 - Server re-calculates every price; the client never sends one.
-- Payment webhooks verified by signature, processed idempotently. No card data stored.
+- Payment webhooks verified by signature, processed idempotently. No card or UPI details stored.
 - S3 buckets fully private; images served only via CloudFront.
 - API Gateway throttling (20 req/s, burst 50) protects cost and the AI endpoint.
 - Least-privilege IAM per Lambda (SAM policy templates).
-- Customer data minimal: name, email, phone, address. Delete-on-request supported.
+- Customer data minimal: name, email, phone, address. Delete-on-request supported, kept in India (Mumbai), in line with India's Digital Personal Data Protection Act.
 
 ## 8. Environments and delivery
 
@@ -202,7 +203,7 @@ See [api-contract.md](api-contract.md). Versioned under `/v1`, used by web, mobi
 | Deployed by | you | GitHub Actions on push to `develop` | GitHub Actions on push to `main` |
 | Data | seed data | test data | real customers |
 
-Later improvement: put prod in a separate AWS account (AWS Organizations, free) for stronger isolation.
+Dev runs in its own member account `cakeshop-dev` (AWS Organizations). Prod goes into a client-owned account at launch.
 
 ## 9. Observability
 
@@ -219,7 +220,7 @@ The Expo/React Native app uses the **same** API, the same Cognito user pool (new
 
 | Spike | Question |
 |---|---|
-| SPIKE-01 | Region: `me-central-1` (UAE, lowest latency to Qatar) vs `eu-central-1`. Check that every service above, especially the chosen Claude model on Bedrock, is available there. |
-| SPIKE-02 | Bedrock vs direct Claude API for the assistant (availability, billing, latency). |
-| SPIKE-03 | Payment gateway that the client's bank supports in Qatar. |
+| ~~SPIKE-01~~ | **Resolved:** Mumbai `ap-south-1`, separate account. [ADR 0006](adr/0006-region-and-account.md) |
+| SPIKE-02 | Bedrock vs direct Claude API. From Mumbai, Bedrock offers Haiku 4.5 with in-India inference or Haiku 5.5 via the global profile. |
+| SPIKE-03 | Indian payment gateway with UPI (Razorpay, Cashfree, PayU …): fees, KYC documents the client needs, hosted checkout, webhooks. |
 | SPIKE-04 | Delivery: own drivers with time slots, or a delivery partner? Affects the slot model. |

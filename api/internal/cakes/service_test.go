@@ -42,8 +42,8 @@ func TestQuote(t *testing.T) {
 		want    int64
 		wantErr error
 	}{
-		{"single 6in chocolate", "chocolate-truffle", "6in", 1, 15000, nil},
-		{"two 8in chocolate", "chocolate-truffle", "8in", 2, 44000, nil},
+		{"single 6in chocolate", "chocolate-truffle", "6in", 1, 85000, nil},
+		{"two 8in chocolate", "chocolate-truffle", "8in", 2, 250000, nil},
 		{"unknown cake", "nope", "6in", 1, 0, cakes.ErrNotFound},
 		{"unknown size", "chocolate-truffle", "99in", 1, 0, cakes.ErrNotFound},
 		{"unavailable cake", "mango-seasonal", "6in", 1, 0, cakes.ErrUnavailable},

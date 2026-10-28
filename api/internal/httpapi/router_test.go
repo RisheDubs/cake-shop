@@ -60,8 +60,8 @@ func TestQuoteEndpoint(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&q); err != nil {
 		t.Fatal(err)
 	}
-	if q.Total.Amount != 47000 {
-		t.Errorf("total = %d, want 47000", q.Total.Amount)
+	if q.Total.Amount != 280000 { // 2 x ₹1,400
+		t.Errorf("total = %d, want 280000", q.Total.Amount)
 	}
 }
 
