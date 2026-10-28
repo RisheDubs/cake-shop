@@ -23,9 +23,9 @@ flowchart LR
 
 | Event | When | Time | Output |
 |---|---|---|---|
-| **Sprint planning** | First work day (Sun in Qatar) | 30 min | Sprint goal (one sentence), issues moved to *Ready*, milestone set |
+| **Sprint planning** | First work day (Sunday) | 30 min | Sprint goal (one sentence), issues moved to *Ready*, milestone set |
 | **Daily log** | Each work day | 5 min | 3 lines in the sprint file: done / next / blocked |
-| **Review / demo** | Last work day (Thu) | 30 min | Show the client working software (dev URL or screen-share). Their feedback becomes new issues |
+| **Review / demo** | Last work day (Thu) | 30 min | Show the client working software (dev URL or screen-share). Thursday works for both sides; India is 2.5 hours ahead of Riyadh, so aim for your morning. Their feedback becomes new issues |
 | **Retrospective** | Last work day (Thu) | 15 min | 1 thing to keep, 1 to change, written in the sprint file |
 | **Backlog refinement** | Any time, ~1 hr/week | | Split L stories, write acceptance criteria |
 
