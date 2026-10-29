@@ -14,11 +14,11 @@ var ErrNotFound = errors.New("not found")
 // ErrUnavailable is returned when a cake exists but is not currently on sale.
 var ErrUnavailable = errors.New("cake not available")
 
-// Money is stored in minor units (dirhams for QAR: 1 QAR = 100 dirhams)
+// Money is stored in minor units (paise for INR: ₹1 = 100 paise)
 // so we never have floating-point rounding problems.
 type Money struct {
-	Amount   int64  `json:"amount"`   // e.g. 18500 = 185.00 QAR
-	Currency string `json:"currency"` // ISO 4217, e.g. "QAR"
+	Amount   int64  `json:"amount"`   // e.g. 85000 = ₹850.00
+	Currency string `json:"currency"` // ISO 4217, e.g. "INR"
 }
 
 // Size is one orderable size of a cake, with its own price.
@@ -34,8 +34,8 @@ type Cake struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
-	Occasions     []string `json:"occasions"`   // birthday, wedding, eid ...
-	Tags          []string `json:"tags"`        // eggless, sugar-free ...
+	Occasions     []string `json:"occasions"`   // birthday, wedding, diwali ...
+	Tags          []string `json:"tags"`        // eggless, sugar-free ... ("eggless" matters a lot in India)
 	Ingredients   []string `json:"ingredients"` // shown on hover / tap
 	Allergens     []string `json:"allergens"`   // gluten, dairy, eggs, nuts ...
 	Sizes         []Size   `json:"sizes"`

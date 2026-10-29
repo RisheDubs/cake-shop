@@ -35,4 +35,4 @@ Why one table: every screen needs one fast query, and at 100 customers everythin
 
 ## Money
 
-All amounts are integers in minor units (`18500` = 185.00 QAR). Never floats.
+All amounts are integers in paise (`85000` = ₹850.00). Never floats.

@@ -7,8 +7,8 @@ GET {{base}}/health
 ### All cakes on sale
 GET {{base}}/v1/cakes
 
-### Eggless cakes for Eid
-GET {{base}}/v1/cakes?occasion=eid&tag=eggless
+### Eggless cakes for Diwali
+GET {{base}}/v1/cakes?occasion=diwali&tag=eggless
 
 ### One cake (ingredients, allergens, sizes)
 GET {{base}}/v1/cakes/pistachio-rose

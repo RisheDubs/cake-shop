@@ -50,9 +50,10 @@ Codes: `bad_request` 400, `unauthorized` 401, `forbidden` 403, `not_found` 404, 
   "id": "pistachio-rose",
   "name": "Pistachio Rose",
   "ingredients": ["flour", "pistachios", "rose water", "condensed milk", "cream", "sugar"],
+  "tags": ["eggless"],
   "allergens": ["gluten", "dairy", "nuts"],
   "sizes": [
-    { "id": "6in", "label": "6 inch", "serves": 8, "price": { "amount": 18000, "currency": "QAR" } }
+    { "id": "6in", "label": "6 inch", "serves": 8, "price": { "amount": 110000, "currency": "INR" } }
   ],
   "leadTimeHours": 48,
   "available": true

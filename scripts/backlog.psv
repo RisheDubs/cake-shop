@@ -3,9 +3,9 @@
 0|type:chore,area:infra,size:S,priority:must|Create AWS account, MFA, SSO user and AWS Budgets alerts ($10/$25)|Follow infra/README.md one-time setup. Done when you can run `aws sts get-caller-identity` via SSO and budget emails are configured.
 0|type:chore,area:infra,size:S,priority:must|Create GitHub repo, push scaffold, protect main and develop|See docs/process/git-workflow.md. Enable branch protection and require api-ci.
 0|type:chore,area:docs,size:S,priority:must|Set up GitHub Project board with Scrumban columns and WIP limits|Columns: Backlog, Ready, In progress (WIP 2), In review (WIP 2), Done. See docs/process/workflow.md.
-0|type:spike,area:infra,size:S,priority:must|SPIKE-01: Choose AWS region|me-central-1 vs eu-central-1. Check Lambda arm64, HTTP API, Cognito, SES, Amplify Hosting and the Claude model on Bedrock. Write ADR 0006.
+0|type:spike,area:infra,size:S,priority:must|SPIKE-01: Choose AWS region|Resolved on Day 1: Mumbai ap-south-1 in a separate cakeshop-dev account. See ADR 0006.
 0|type:spike,area:ai,size:S,priority:must|SPIKE-02: Bedrock vs Claude API for the assistant|Compare availability in chosen region, pricing, latency, billing. Write ADR 0007.
-0|type:spike,area:api,size:S,priority:must|SPIKE-03: Payment gateway for Qatar|Find which gateways the client's bank supports, fees, hosted checkout and webhook support. Write ADR 0008.
+0|type:spike,area:api,size:S,priority:must|SPIKE-03: Payment gateway for India|Compare Razorpay, Cashfree and PayU: UPI + cards, fees, KYC documents the client needs, hosted checkout, webhooks, settlement time. Write ADR 0008 and start the client's application.
 0|type:chore,area:docs,size:S,priority:must|Collect client menu, prices, sizes, ingredients, allergens, lead times and photos|Real data replaces store/seed.go in Sprint 2. Also capture delivery zones, hours, daily capacity.
 1|type:chore,area:api,size:M,priority:must|Go basics: Tour of Go + read every file in api/|Goal: explain each package in api/internal in your own words in the sprint log.
 1|type:story,area:api,size:S,priority:must|Run the API locally and debug it in VS Code|Use the launch config and requests.http. Set a breakpoint in cakes.Service.Quote.
@@ -30,7 +30,7 @@
 6|type:story,area:ai,size:M,priority:must|Chat Lambda skeleton with Claude tool-use loop|POST /v1/chat runs the tool loop with list_cakes, get_cake, quote. Separate Lambda, 30s timeout.
 6|type:story,area:ai,size:M,priority:must|Tools: check_delivery_slots and create_draft_order|Assistant can propose slots and create a draft order returning a checkout link. Never takes payment.
 6|type:story,area:ai,size:S,priority:must|Chat history in DynamoDB with 30-day TTL|CHAT#session items, last N turns sent to the model.
-6|type:story,area:ai,size:S,priority:must|System prompt: on-topic, facts only from tools, Arabic + English|Prompt stored in code with version number.
+6|type:story,area:ai,size:S,priority:must|System prompt: on-topic, facts only from tools, English (+ Hindi/Kannada if wanted)|Prompt stored in code with version number.
 7|type:story,area:ai,size:M,priority:must|AI eval test set in CI|30+ real customer questions with expected tool calls / constraints (e.g. never states a price without calling quote).
 7|type:story,area:ai,size:S,priority:must|Chat guardrails: turn limit, token limit, throttling, error fallback|Graceful message when the model is unavailable.
 7|type:chore,area:infra,size:S,priority:must|Alarms and dashboards: errors, latency, AI token usage|CloudWatch alarms emailed to you.
