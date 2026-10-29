@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com). Versions follow semver.
 ## [Unreleased]
 
 ### Changed
+- Payment gateway: Cashfree Payments (ADR 0008)
 - Localised for a Bangalore client: prices in INR (paise), Diwali occasion, Indian payment gateways, English-first assistant
 - Region Mumbai `ap-south-1` in a dedicated `cakeshop-dev` AWS account (ADR 0006); SAM profile, region and `project=cakeshop` tags in `samconfig.toml`
 
