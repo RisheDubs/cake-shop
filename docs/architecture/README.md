@@ -21,7 +21,7 @@ flowchart LR
   C([Customer<br/>web / mobile]) -->|browse, order, chat| SYS[Cake Shop<br/>platform]
   O([Owner / staff]) -->|manage menu,<br/>orders, dates| SYS
   SYS -->|tool-calling| AI[Claude<br/>Haiku-class model]
-  SYS -->|hosted checkout,<br/>webhooks| PAY[Payment gateway<br/>UPI, cards]
+  SYS -->|checkout session,<br/>webhooks| PAY[Cashfree<br/>UPI, cards]
   SYS -->|order emails| MAIL[Amazon SES]
 ```
 
@@ -58,7 +58,7 @@ flowchart TB
 
   subgraph External
     BR[Amazon Bedrock or<br/>Claude API]
-    PG[Payment gateway<br/>UPI, cards]
+    PG[Cashfree<br/>UPI, cards]
     SES[SES email]
   end
 
@@ -97,6 +97,7 @@ flowchart TB
 | **Cognito** | Customer sign-up/login, `admin` group for owner | free tier at this size |
 | **SSM Parameter Store** | API keys/secrets (SecureString), free standard tier | $0 |
 | **Bedrock / Claude API** | AI assistant, Haiku-class model | ~$2–10 |
+| **Cashfree** (not AWS) | UPI, cards, net banking; ~1.95% + GST per payment, T+1 settlement | per order |
 | **SES** | Order confirmation emails | ~$0 |
 | **CloudWatch + Budgets** | Logs, error alarms, cost alerts | ~$0–3 |
 | | **Total** | **≈ $10–40 / month** |
@@ -126,7 +127,7 @@ sequenceDiagram
   participant B as Customer
   participant API as api Lambda
   participant DB as DynamoDB
-  participant PG as Payment gateway
+  participant PG as Cashfree
   participant M as SES
   B->>API: GET /v1/slots?date=...&cake=...
   API->>DB: capacity + blocked dates + lead time
@@ -222,5 +223,5 @@ The Expo/React Native app uses the **same** API, the same Cognito user pool (new
 |---|---|
 | ~~SPIKE-01~~ | **Resolved:** Mumbai `ap-south-1`, separate account. [ADR 0006](adr/0006-region-and-account.md) |
 | SPIKE-02 | Bedrock vs direct Claude API. From Mumbai, Bedrock offers Haiku 4.5 with in-India inference or Haiku 5.5 via the global profile. |
-| SPIKE-03 | Indian payment gateway with UPI (Razorpay, Cashfree, PayU …): fees, KYC documents the client needs, hosted checkout, webhooks. |
+| ~~SPIKE-03~~ | **Resolved:** Cashfree Payments. [ADR 0008](adr/0008-payment-gateway-cashfree.md) |
 | SPIKE-04 | Delivery: own drivers with time slots, or a delivery partner? Affects the slot model. |
