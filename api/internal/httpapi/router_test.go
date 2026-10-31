@@ -77,3 +77,35 @@ func TestCORSPreflight(t *testing.T) {
 		t.Errorf("allow-origin = %q", got)
 	}
 }
+
+func TestGetCakeReturnsSizes(t *testing.T) {
+	rec := do(t, newServer(), "GET", "/v1/cakes/pistachio-rose")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	var c cakes.Cake
+	if err := json.NewDecoder(rec.Body).Decode(&c); err != nil {
+		t.Fatal(err)
+	}
+	if len(c.Sizes) != 3 {
+		t.Errorf("sizes = %d, want 3", len(c.Sizes))
+	}
+}
+
+func TestQuoteEndpointRejectsBadQuantity(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"not a number", "/v1/cakes/red-velvet/quote?size=8in&qty=abc"},
+		{"zero", "/v1/cakes/red-velvet/quote?size=8in&qty=0"},
+		{"too many", "/v1/cakes/red-velvet/quote?size=8in&qty=50"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if rec := do(t, newServer(), "GET", tc.path); rec.Code != http.StatusBadRequest {
+				t.Errorf("status = %d, want 400", rec.Code)
+			}
+		})
+	}
+}
