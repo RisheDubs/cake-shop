@@ -18,3 +18,15 @@ GET {{base}}/v1/cakes/red-velvet/quote?size=8in&qty=2
 
 ### Unavailable cake -> 409
 GET {{base}}/v1/cakes/mango-seasonal/quote?size=6in
+
+### Mixed case works (expect 200, 1 cake)
+GET {{base}}/v1/cakes?occasion=Diwali
+
+### Unknown parameter (expect 400)
+GET {{base}}/v1/cakes?colour=red
+
+### Bad occasion (expect 400 with a reason)
+GET {{base}}/v1/cakes?occasion=new%20year
+
+### Bad all value (expect 400)
+GET {{base}}/v1/cakes?all=maybe

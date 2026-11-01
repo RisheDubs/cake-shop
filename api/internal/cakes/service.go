@@ -16,8 +16,12 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-// List returns cakes matching the filter.
+// List returns cakes matching the filter. Invalid filters return an error wrapping ErrInvalid.
 func (s *Service) List(f Filter) ([]Cake, error) {
+	f = f.Normalize()
+	if err := f.Validate(); err != nil {
+		return nil, err
+	}
 	all, err := s.repo.ListCakes()
 	if err != nil {
 		return nil, err
