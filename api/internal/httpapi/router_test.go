@@ -109,3 +109,48 @@ func TestQuoteEndpointRejectsBadQuantity(t *testing.T) {
 		})
 	}
 }
+
+func TestListCakesValidation(t *testing.T) {
+	tests := []struct {
+		name      string
+		path      string
+		wantCode  int
+		wantCakes int // only checked for 200
+	}{
+		{"no filters", "/v1/cakes", 200, 3},
+		{"occasion", "/v1/cakes?occasion=diwali", 200, 1},
+		{"mixed case occasion", "/v1/cakes?occasion=Diwali", 200, 1},
+		{"all=true shows unavailable", "/v1/cakes?all=true", 200, 4},
+		{"unknown parameter", "/v1/cakes?colour=red", 400, 0},
+		{"repeated parameter", "/v1/cakes?tag=a&tag=b", 400, 0},
+		{"bad all value", "/v1/cakes?all=maybe", 400, 0},
+		{"bad occasion", "/v1/cakes?occasion=new%20year", 400, 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, newServer(), "GET", tc.path)
+			if rec.Code != tc.wantCode {
+				t.Fatalf("status = %d, want %d (body %s)", rec.Code, tc.wantCode, rec.Body)
+			}
+			if tc.wantCode == 200 {
+				var body struct{ Cakes []cakes.Cake }
+				if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+					t.Fatal(err)
+				}
+				if len(body.Cakes) != tc.wantCakes {
+					t.Errorf("cakes = %d, want %d", len(body.Cakes), tc.wantCakes)
+				}
+				return
+			}
+			var e struct {
+				Error struct{ Code, Message string }
+			}
+			if err := json.NewDecoder(rec.Body).Decode(&e); err != nil {
+				t.Fatal(err)
+			}
+			if e.Error.Code != "bad_request" || e.Error.Message == "" {
+				t.Errorf("error body = %+v, want code bad_request with a message", e.Error)
+			}
+		})
+	}
+}
