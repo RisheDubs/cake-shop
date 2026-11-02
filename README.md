@@ -10,6 +10,10 @@ Online cake shop with an AI ordering assistant. Cakes are the hero: customers br
 | Mobile | Expo / React Native on the same API (optional) |
 | Process | Solo Scrumban, 1-week sprints, all in GitHub |
 
+## The Architecture
+<img width="1095" height="576" alt="image" src="https://github.com/user-attachments/assets/4b1a5bb0-d5a0-47ce-ab4e-897b249e9a29" />
+
+
 ## Repository layout
 
 ```
