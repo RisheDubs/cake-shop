@@ -55,7 +55,7 @@ Then open `api/requests.http` and click **Send Request**, or press **F5** to deb
 ## Git setup (first time)
 
 ```bash
-1
+git init -b main
 git add -A
 git commit -m "chore: project scaffold, architecture v1, process"
 git switch -c develop
