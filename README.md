@@ -36,6 +36,7 @@ cake-shop/
 ├── docs/                architecture, process, sprints, project logs
 ├── scripts/             GitHub backlog setup
 └── .github/             CI, issue and PR templates
+
 ```
 
 ## Quick start
